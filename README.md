@@ -4,15 +4,17 @@
 
 # Ruler Slider Plugin for Flutter
 
-This package provides a highly customizable horizontal ruler slider for Flutter. It allows users to scroll through a ruler-like interface and select values, with options for custom tick marks, labels, snapping behavior, and more.
+This package provides a highly customizable horizontal and vertical ruler slider for Flutter. It allows users to scroll through a ruler-like interface and select values, with options for custom tick marks, labels, snapping behavior, and more.
 
 ## Features
 
+- **Horizontal and Vertical orientation** support.
 - Customizable tick marks (color, size, and spacing).
 - Optional snapping behavior for precise value selection.
 - Custom labels for specific tick intervals.
 - Adjustable appearance of the ruler, tick marks, labels, and fixed bars.
 - Callback function that returns the selected value.
+- Label scale factor for precision-based rulers.
 
 ## Screenshots
 
@@ -44,13 +46,15 @@ Here are some screenshots showcasing the RulerSlider in action:
 - **`enableSnapping`**: (bool) Enable or disable snapping behavior.
 - **`majorTickInterval`**: (int) Interval for major tick marks (e.g., every 5 or 10 ticks).
 - **`labelInterval`**: (int) Interval for showing labels (e.g., every 10 ticks).
-- **`labelVerticalOffset`**: (double) Vertical offset for the labels.
-- **`showBottomLabels`**: (bool) Whether to display bottom labels.
-- **`labelTextStyle`**: (TextStyle) Custom text style for bottom labels.
-- **`majorTickHeight`**: (double) Height of major tick marks.
-- **`minorTickHeight`**: (double) Height of minor tick marks.
+- **`labelOffset`**: (double) Offset for the labels (vertical for horizontal orientation, horizontal for vertical orientation).
+- **`showLabels`**: (bool) Whether to display labels.
+- **`labelTextStyle`**: (TextStyle) Custom text style for labels.
+- **`majorTickLength`**: (double) Length of major tick marks.
+- **`minorTickLength`**: (double) Length of minor tick marks.
+- **`orientation`**: (RulerOrientation) Orientation of the ruler (`horizontal` or `vertical`). Defaults to `horizontal`.
+- **`labelScaleFactor`**: (double) Factor to divide label values by (useful for precision-based rulers).
 
-## Example
+## Example (Horizontal)
 
 ```dart
 RulerSlider(
@@ -77,11 +81,31 @@ RulerSlider(
   enableSnapping: true,
   majorTickInterval: 5,
   labelInterval: 10,
-  labelVerticalOffset: 30.0,
-  showBottomLabels: true,
+  labelOffset: 30.0,
+  showLabels: true,
   labelTextStyle: TextStyle(color: Colors.black, fontSize: 12),
-  majorTickHeight: 20.0,
-  minorTickHeight: 10.0,
+  majorTickLength: 20.0,
+  minorTickLength: 10.0,
+  orientation: RulerOrientation.horizontal,
+)
+```
+
+## Example (Vertical)
+
+```dart
+RulerSlider(
+  minValue: 0.0,
+  maxValue: 100.0,
+  initialValue: 50.0,
+  rulerWidth: 150.0,
+  rulerHeight: 400.0,
+  selectedBarColor: Colors.blue,
+  unselectedBarColor: Colors.grey,
+  tickSpacing: 10.0,
+  onChanged: (double value) {
+    print("Current value: \${value.toStringAsFixed(1)}");
+  },
+  orientation: RulerOrientation.vertical,
 )
 ```
 
