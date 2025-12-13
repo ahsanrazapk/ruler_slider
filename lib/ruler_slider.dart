@@ -49,6 +49,7 @@ enum RulerOrientation {
 /// - `majorTickLength`: The length of the major ticks.
 /// - `minorTickLength`: The length of the minor ticks.
 /// - `orientation`: The orientation of the ruler (horizontal or vertical).
+/// - `labelScaleFactor`: A factor to divide label values by (useful when maxValue is scaled for precision, e.g., maxValue=1000 with labelScaleFactor=10 shows labels 0-100).
 ///
 /// ## Example (Horizontal)
 /// ```dart
@@ -140,6 +141,7 @@ class RulerSlider extends StatefulWidget {
   final double majorTickLength;
   final double minorTickLength;
   final RulerOrientation orientation;
+  final double labelScaleFactor;
 
   const RulerSlider({
     super.key,
@@ -170,6 +172,7 @@ class RulerSlider extends StatefulWidget {
     this.majorTickLength = 20.0,
     this.minorTickLength = 10.0,
     this.orientation = RulerOrientation.horizontal,
+    this.labelScaleFactor = 1.0,
   });
 
   @override
@@ -295,6 +298,7 @@ class RulerSliderState extends State<RulerSlider>
                   minorTickLength: widget.minorTickLength,
                   barWidth: widget.fixedBarWidth,
                   orientation: widget.orientation,
+                  labelScaleFactor: widget.labelScaleFactor,
                 ),
               ),
               if (widget.showFixedLabel) _buildFixedLabel(),
@@ -379,6 +383,7 @@ class RulerPainter extends CustomPainter {
   final double minorTickLength;
   final double barWidth;
   final RulerOrientation orientation;
+  final double labelScaleFactor;
 
   RulerPainter({
     required this.rulerPosition,
@@ -399,6 +404,7 @@ class RulerPainter extends CustomPainter {
     required this.minorTickLength,
     required this.barWidth,
     required this.orientation,
+    required this.labelScaleFactor,
   });
 
   bool get _isHorizontal => orientation == RulerOrientation.horizontal;
@@ -444,10 +450,16 @@ class RulerPainter extends CustomPainter {
 
       if (showLabels) {
         if (i % labelInterval == 0) {
-          String label = customLabels != null &&
-                  i ~/ labelInterval < customLabels!.length
-              ? customLabels![i ~/ labelInterval]
-              : i.toStringAsFixed(0);
+          String label;
+          if (customLabels != null && i ~/ labelInterval < customLabels!.length) {
+            label = customLabels![i ~/ labelInterval];
+          } else {
+            // Scale the label value by labelScaleFactor
+            double scaledValue = i / labelScaleFactor;
+            label = scaledValue == scaledValue.roundToDouble()
+                ? scaledValue.toInt().toString()
+                : scaledValue.toStringAsFixed(1);
+          }
 
           TextPainter textPainter = TextPainter(
             text: TextSpan(
@@ -493,10 +505,16 @@ class RulerPainter extends CustomPainter {
 
       if (showLabels) {
         if (i % labelInterval == 0) {
-          String label = customLabels != null &&
-                  i ~/ labelInterval < customLabels!.length
-              ? customLabels![i ~/ labelInterval]
-              : i.toStringAsFixed(0);
+          String label;
+          if (customLabels != null && i ~/ labelInterval < customLabels!.length) {
+            label = customLabels![i ~/ labelInterval];
+          } else {
+            // Scale the label value by labelScaleFactor
+            double scaledValue = i / labelScaleFactor;
+            label = scaledValue == scaledValue.roundToDouble()
+                ? scaledValue.toInt().toString()
+                : scaledValue.toStringAsFixed(1);
+          }
 
           TextPainter textPainter = TextPainter(
             text: TextSpan(
