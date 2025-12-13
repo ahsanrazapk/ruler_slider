@@ -50,6 +50,7 @@ enum RulerOrientation {
 /// - `minorTickLength`: The length of the minor ticks.
 /// - `orientation`: The orientation of the ruler (horizontal or vertical).
 /// - `labelScaleFactor`: A factor to divide label values by (useful when maxValue is scaled for precision, e.g., maxValue=1000 with labelScaleFactor=10 shows labels 0-100).
+/// - `snapInterval`: The interval to snap to when `enableSnapping` is true (default is 10.0). Set to 1.0 to snap to every tick.
 ///
 /// ## Example (Horizontal)
 /// ```dart
@@ -142,6 +143,7 @@ class RulerSlider extends StatefulWidget {
   final double minorTickLength;
   final RulerOrientation orientation;
   final double labelScaleFactor;
+  final double snapInterval;
 
   const RulerSlider({
     super.key,
@@ -173,6 +175,7 @@ class RulerSlider extends StatefulWidget {
     this.minorTickLength = 10.0,
     this.orientation = RulerOrientation.horizontal,
     this.labelScaleFactor = 1.0,
+    this.snapInterval = 10.0,
   });
 
   @override
@@ -215,15 +218,15 @@ class RulerSliderState extends State<RulerSlider>
   void _handleDragUpdate(DragUpdateDetails details) {
     setState(() {
       final delta =
-          _isHorizontal ? details.delta.dx : details.delta.dy;
+      _isHorizontal ? details.delta.dx : details.delta.dy;
       _rulerPosition += delta * widget.scrollSensitivity;
       double totalScrollableSize = widget.maxValue * widget.tickSpacing;
       _rulerPosition = _rulerPosition.clamp(
           -totalScrollableSize + _rulerMainAxisSize / 2,
           _rulerMainAxisSize / 2);
       _value = (((_rulerMainAxisSize / 2 - _rulerPosition) /
-                  totalScrollableSize) *
-              widget.maxValue)
+          totalScrollableSize) *
+          widget.maxValue)
           .clamp(widget.minValue, widget.maxValue);
 
       if (widget.onChanged != null) {
@@ -241,11 +244,11 @@ class RulerSliderState extends State<RulerSlider>
 
         // Animate the snapping
         _animation = Tween<double>(
-                begin: _rulerPosition,
-                end: _rulerMainAxisSize / 2 -
-                    (snappedValue / widget.maxValue) * totalScrollableSize)
+            begin: _rulerPosition,
+            end: _rulerMainAxisSize / 2 -
+                (snappedValue / widget.maxValue) * totalScrollableSize)
             .animate(CurvedAnimation(
-                parent: _animationController, curve: Curves.easeOut))
+            parent: _animationController, curve: Curves.easeOut))
           ..addListener(() {
             setState(() {
               _rulerPosition = _animation.value;
@@ -357,9 +360,8 @@ class RulerSliderState extends State<RulerSlider>
       double stepSize = widget.maxValue / (widget.customLabels!.length - 1);
       return (value / stepSize).round() * stepSize;
     } else {
-      // Snap to the nearest multiple of 10 (or adjust based on your snap interval)
-      double snapInterval = 10.0;
-      return (value / snapInterval).round() * snapInterval;
+      // Snap to the nearest multiple of snapInterval
+      return (value / widget.snapInterval).round() * widget.snapInterval;
     }
   }
 }
@@ -432,7 +434,7 @@ class RulerPainter extends CustomPainter {
     for (double i = 0; i <= maxValue; i += 1) {
       double xPos = i * tickSpacing;
       double tickLength =
-          (i % majorTickInterval == 0) ? majorTickLength : minorTickLength;
+      (i % majorTickInterval == 0) ? majorTickLength : minorTickLength;
 
       if (xPos <= rulerPosition.abs() + size.width / 2) {
         canvas.drawLine(
@@ -487,7 +489,7 @@ class RulerPainter extends CustomPainter {
     for (double i = 0; i <= maxValue; i += 1) {
       double yPos = i * tickSpacing;
       double tickLength =
-          (i % majorTickInterval == 0) ? majorTickLength : minorTickLength;
+      (i % majorTickInterval == 0) ? majorTickLength : minorTickLength;
 
       if (yPos <= rulerPosition.abs() + size.height / 2) {
         canvas.drawLine(
