@@ -24,7 +24,8 @@ class RulerSliderDemo extends StatefulWidget {
 class _RulerSliderDemoState extends State<RulerSliderDemo> {
   double minValue = 0.0;
   double maxValue = 100.0;
-  double initialValue = 50.0;
+  double horizontalValue = 50.0;
+  double verticalValue = 50.0;
   double rulerWidth = 300.0;
   double rulerHeight = 100.0;
   double tickSpacing = 10.0;
@@ -34,12 +35,13 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
   bool enableSnapping = false;
   int majorTickInterval = 5;
   int labelInterval = 10;
-  double labelVerticalOffset = 25.0;
-  bool showBottomLabels = true;
-  double majorTickHeight = 20.0;
-  double minorTickHeight = 10.0;
+  double labelOffset = 25.0;
+  bool showLabels = true;
+  double majorTickLength = 20.0;
+  double minorTickLength = 10.0;
   String selectedColor = 'Blue';
   String selectedLabelColor = 'Black';
+  RulerOrientation orientation = RulerOrientation.horizontal;
 
   final List<String> colors = ['Blue', 'Red', 'Green', 'Yellow'];
   final List<String> labelColors = ['Black', 'Red', 'Blue', 'Green'];
@@ -71,44 +73,44 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Display the RulerSlider with all dynamic values
-              RulerSlider(
-                minValue: minValue,
-                maxValue: maxValue,
-                initialValue: initialValue,
-                rulerWidth: MediaQuery.of(context).size.width/2,
-                rulerHeight: rulerHeight,
-                selectedBarColor: colorMap[selectedColor]!,
-                unselectedBarColor: Colors.grey,
-                tickSpacing: tickSpacing,
-                showFixedBar: showFixedBar,
-                fixedBarColor: Colors.red,
-                fixedBarWidth: 2.0,
-                fixedBarHeight: 40.0,
-                showFixedLabel: showFixedLabel,
-                fixedLabelColor: Colors.red,
-                scrollSensitivity: scrollSensitivity,
-                enableSnapping: enableSnapping,
-                majorTickInterval: majorTickInterval,
-                labelInterval: labelInterval,
-                labelVerticalOffset: labelVerticalOffset,
-                showBottomLabels: showBottomLabels,
-                labelTextStyle: TextStyle(
-                  color: labelColorMap[selectedLabelColor]!,
-                  fontSize: 12,
-                ),
-                majorTickHeight: majorTickHeight,
-                minorTickHeight: minorTickHeight,
-                customLabels: customLabels,
-                onChanged: (value) {
-                  setState(() {
-                    initialValue = value;
-                  });
-                },
+              // Orientation selector
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Orientation: '),
+                  SegmentedButton<RulerOrientation>(
+                    segments: const [
+                      ButtonSegment(
+                        value: RulerOrientation.horizontal,
+                        label: Text('Horizontal'),
+                        icon: Icon(Icons.swap_horiz),
+                      ),
+                      ButtonSegment(
+                        value: RulerOrientation.vertical,
+                        label: Text('Vertical'),
+                        icon: Icon(Icons.swap_vert),
+                      ),
+                    ],
+                    selected: {orientation},
+                    onSelectionChanged: (Set<RulerOrientation> newSelection) {
+                      setState(() {
+                        orientation = newSelection.first;
+                      });
+                    },
+                  ),
+                ],
               ),
-              Divider(),
+              const SizedBox(height: 20),
+
+              // Display the RulerSlider based on orientation
+              if (orientation == RulerOrientation.horizontal)
+                _buildHorizontalRuler()
+              else
+                _buildVerticalRuler(),
+
+              const Divider(),
               // Controls to dynamically change properties
-              Text('Adjust RulerSlider Features:'),
+              const Text('Adjust RulerSlider Features:'),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -139,7 +141,7 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
                     selectedColor = newColor!;
                   });
                 },
-                hint: Text("Select Bar Color"),
+                hint: const Text("Select Bar Color"),
               ),
               DropdownButton<String>(
                 value: selectedLabelColor,
@@ -154,10 +156,10 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
                     selectedLabelColor = newColor!;
                   });
                 },
-                hint: Text("Select Label Color"),
+                hint: const Text("Select Label Color"),
               ),
               SwitchListTile(
-                title: Text('Show Fixed Bar'),
+                title: const Text('Show Fixed Bar'),
                 value: showFixedBar,
                 onChanged: (value) {
                   setState(() {
@@ -166,7 +168,7 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
                 },
               ),
               SwitchListTile(
-                title: Text('Show Fixed Label'),
+                title: const Text('Show Fixed Label'),
                 value: showFixedLabel,
                 onChanged: (value) {
                   setState(() {
@@ -175,7 +177,7 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
                 },
               ),
               SwitchListTile(
-                title: Text('Enable Snapping'),
+                title: const Text('Enable Snapping'),
                 value: enableSnapping,
                 onChanged: (value) {
                   setState(() {
@@ -184,11 +186,11 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
                 },
               ),
               SwitchListTile(
-                title: Text('Show Bottom Labels'),
-                value: showBottomLabels,
+                title: const Text('Show Labels'),
+                value: showLabels,
                 onChanged: (value) {
                   setState(() {
-                    showBottomLabels = value;
+                    showLabels = value;
                   });
                 },
               ),
@@ -211,14 +213,14 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Major Tick Height: ${majorTickHeight.toStringAsFixed(1)}'),
+                  Text('Major Tick Length: ${majorTickLength.toStringAsFixed(1)}'),
                   Slider(
-                    value: majorTickHeight,
+                    value: majorTickLength,
                     min: 10.0,
                     max: 40.0,
                     onChanged: (value) {
                       setState(() {
-                        majorTickHeight = value;
+                        majorTickLength = value;
                       });
                     },
                   ),
@@ -227,14 +229,14 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Minor Tick Height: ${minorTickHeight.toStringAsFixed(1)}'),
+                  Text('Minor Tick Length: ${minorTickLength.toStringAsFixed(1)}'),
                   Slider(
-                    value: minorTickHeight,
+                    value: minorTickLength,
                     min: 5.0,
                     max: 20.0,
                     onChanged: (value) {
                       setState(() {
-                        minorTickHeight = value;
+                        minorTickLength = value;
                       });
                     },
                   ),
@@ -243,15 +245,15 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Label Vertical Offset: ${labelVerticalOffset.toStringAsFixed(1)}'),
+                  Text('Label Offset: ${labelOffset.toStringAsFixed(1)}'),
                   Expanded(
                     child: Slider(
-                      value: labelVerticalOffset,
+                      value: labelOffset,
                       min: 10.0,
                       max: 50.0,
                       onChanged: (value) {
                         setState(() {
-                          labelVerticalOffset = value;
+                          labelOffset = value;
                         });
                       },
                     ),
@@ -262,6 +264,103 @@ class _RulerSliderDemoState extends State<RulerSliderDemo> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHorizontalRuler() {
+    return Column(
+      children: [
+        Text(
+          'Horizontal: ${horizontalValue.toStringAsFixed(1)}',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        RulerSlider(
+          minValue: minValue,
+          maxValue: maxValue,
+          initialValue: horizontalValue,
+          rulerWidth: MediaQuery.of(context).size.width - 32,
+          rulerHeight: rulerHeight,
+          selectedBarColor: colorMap[selectedColor]!,
+          unselectedBarColor: Colors.grey,
+          tickSpacing: tickSpacing,
+          showFixedBar: showFixedBar,
+          fixedBarColor: Colors.red,
+          fixedBarWidth: 2.0,
+          fixedBarHeight: 40.0,
+          showFixedLabel: showFixedLabel,
+          fixedLabelColor: Colors.red,
+          scrollSensitivity: scrollSensitivity,
+          enableSnapping: enableSnapping,
+          majorTickInterval: majorTickInterval,
+          labelInterval: labelInterval,
+          labelOffset: labelOffset,
+          showLabels: showLabels,
+          labelTextStyle: TextStyle(
+            color: labelColorMap[selectedLabelColor]!,
+            fontSize: 12,
+          ),
+          majorTickLength: majorTickLength,
+          minorTickLength: minorTickLength,
+          customLabels: customLabels,
+          orientation: RulerOrientation.horizontal,
+          onChanged: (value) {
+            setState(() {
+              horizontalValue = value;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVerticalRuler() {
+    return Column(
+      children: [
+        Text(
+          'Vertical: ${verticalValue.toStringAsFixed(1)}',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 400,
+          child: RulerSlider(
+            minValue: minValue,
+            maxValue: maxValue,
+            initialValue: verticalValue,
+            rulerWidth: 150,
+            rulerHeight: 400,
+            selectedBarColor: colorMap[selectedColor]!,
+            unselectedBarColor: Colors.grey,
+            tickSpacing: tickSpacing,
+            showFixedBar: showFixedBar,
+            fixedBarColor: Colors.red,
+            fixedBarWidth: 2.0,
+            fixedBarHeight: 40.0,
+            showFixedLabel: showFixedLabel,
+            fixedLabelColor: Colors.red,
+            scrollSensitivity: scrollSensitivity,
+            enableSnapping: enableSnapping,
+            majorTickInterval: majorTickInterval,
+            labelInterval: labelInterval,
+            labelOffset: 5.0, // Smaller offset for vertical since labels are next to ticks
+            showLabels: showLabels,
+            labelTextStyle: TextStyle(
+              color: labelColorMap[selectedLabelColor]!,
+              fontSize: 12,
+            ),
+            majorTickLength: majorTickLength,
+            minorTickLength: minorTickLength,
+            customLabels: customLabels,
+            orientation: RulerOrientation.vertical,
+            onChanged: (value) {
+              setState(() {
+                verticalValue = value;
+              });
+            },
+          ),
+        ),
+      ],
     );
   }
 }
